@@ -1,0 +1,239 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+# In[39]:
+
+
+import pandas as pd
+import matplotlib.pyplot as plt
+import numpy as np
+import seaborn as sns
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler,PolynomialFeatures
+from sklearn.linear_model import LinearRegression
+get_ipython().run_line_magic('matplotlib', 'inline')
+
+
+# In[40]:
+
+
+file_name='https://s3-api.us-geo.objectstorage.softlayer.net/cf-courses-data/CognitiveClass/DA0101EN/coursera/project/kc_house_data_NaN.csv'
+df=pd.read_csv(file_name)
+
+
+# In[41]:
+
+
+df.head()
+
+
+# In[42]:
+
+
+df.describe()
+
+
+# In[43]:
+
+
+df.dtypes
+
+
+# In[51]:
+
+
+df.drop(columns=['id','Unnamed: 0'], axis=1, inplace=True)
+
+
+# In[52]:
+
+
+df.describe()
+
+
+# In[57]:
+
+
+print("number of NaN values for the column bedrooms :", df['bedrooms'].isnull().sum())
+print("number of NaN values for the column bathrooms :", df['bathrooms'].isnull().sum())
+
+
+# In[56]:
+
+
+mean=df['bathrooms'].mean()
+df['bathrooms'].replace(np.nan,mean, inplace=True)
+
+
+# In[58]:
+
+
+df.head()
+
+
+# In[68]:
+
+
+floor = df['floors'].value_counts()
+floor.to_frame()
+
+
+# In[69]:
+
+
+import matplotlib.pyplot as plt
+import seaborn as sns
+get_ipython().run_line_magic('matplotlib', 'inline')
+
+
+# In[70]:
+
+
+sns.boxplot(x="waterfront", y="price", data=df)
+
+
+# In[71]:
+
+
+sns.regplot(x="sqft_above", y="price", data=df)
+
+
+# In[72]:
+
+
+df.corr()['price'].sort_values()
+
+
+# In[74]:
+
+
+X = df[['sqft_above']]
+Y = df['price']
+lm = LinearRegression()
+lm.fit(X,Y)
+lm.score(X, Y)
+
+
+# In[77]:
+
+
+features =df[["floors", "waterfront","lat" ,"bedrooms" ,"sqft_basement" ,"view" ,"bathrooms","sqft_living15","sqft_above","grade","sqft_living"]]
+lm.fit(features, df['price'])
+
+
+# In[80]:
+
+
+lm.score(features,df['price'])
+
+
+# In[82]:
+
+
+Input=[('scale',StandardScaler()),('polynomial', PolynomialFeatures(include_bias=False)),('model',LinearRegression())]
+
+
+# In[81]:
+
+
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
+
+
+# In[83]:
+
+
+pipe=Pipeline(Input)
+pipe
+
+
+# In[84]:
+
+
+pipe.fit(features,df['price'])
+
+
+# In[86]:
+
+
+ypipe=pipe.predict(features)
+ypipe[0:4]
+
+
+# In[87]:
+
+
+pipe.score(features,df['price'])
+
+
+# In[88]:
+
+
+from sklearn.model_selection import cross_val_score
+from sklearn.model_selection import train_test_split
+print("done")
+
+
+# In[89]:
+
+
+features =["floors", "waterfront","lat" ,"bedrooms" ,"sqft_basement" ,"view" ,"bathrooms","sqft_living15","sqft_above","grade","sqft_living"]    
+X = df[features]
+Y = df['price']
+
+x_train, x_test, y_train, y_test = train_test_split(X, Y, test_size=0.15, random_state=1)
+
+
+print("number of test samples:", x_test.shape[0])
+print("number of training samples:",x_train.shape[0])
+
+
+# In[90]:
+
+
+from sklearn.linear_model import Ridge
+
+
+# In[97]:
+
+
+RigeModel=Ridge(alpha=0.1)
+
+
+# In[98]:
+
+
+RigeModel.fit(x_train, y_train)
+
+
+# In[99]:
+
+
+RigeModel.score(x_train, y_train)
+
+
+# In[110]:
+
+
+pr=PolynomialFeatures(degree=2)
+x_train_pr=pr.fit_transform(x_train[["floors", "waterfront","lat" ,"bedrooms" ,"sqft_basement" ,"view" ,"bathrooms","sqft_living15","sqft_above","grade","sqft_living"]])
+x_test_pr=pr.fit_transform(x_test[["floors", "waterfront","lat" ,"bedrooms" ,"sqft_basement" ,"view" ,"bathrooms","sqft_living15","sqft_above","grade","sqft_living"]])                          
+
+
+# In[111]:
+
+
+RigeModel.fit(x_train_pr, y_train)
+
+
+# In[112]:
+
+
+RigeModel.score(x_test_pr, y_test)
+
+
+# In[ ]:
+
+
+
+
